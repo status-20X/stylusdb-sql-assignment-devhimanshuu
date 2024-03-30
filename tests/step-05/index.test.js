@@ -7,7 +7,7 @@ test("Basic Jest Test", () => {
 });
 
 test("Read CSV File", async () => {
-  const data = await readCSV("./sample.csv");
+  const data = await readCSV("./student.csv");
   expect(data.length).toBeGreaterThan(0);
   expect(data.length).toBe(3);
   expect(data[0].name).toBe("John");
@@ -15,19 +15,21 @@ test("Read CSV File", async () => {
 });
 
 test("Parse SQL Query", () => {
-  const query = "SELECT id, name FROM sample";
+  const query = "SELECT id, name FROM student";
   const parsed = parseQuery(query);
   expect(parsed).toEqual({
     fields: ["id", "name"],
-    table: "sample",
+    table: "student",
     whereClauses: [],
+    joinCondition: null,
+    joinTable: null,
   });
   const invalidQuery = "SELECT id, name";
   expect(() => parseQuery(invalidQuery)).toThrow("Invalid query format");
 });
 
 test("Execute SQL Query", async () => {
-  const query = "SELECT id, name FROM sample";
+  const query = "SELECT id, name FROM student";
   const result = await executeSELECTQuery(query);
   expect(result.length).toBeGreaterThan(0);
   expect(result[0]).toHaveProperty("id");
@@ -49,17 +51,19 @@ test("Parse SQL Query with WHERE Clause", () => {
         value: "25",
       },
     ],
+    joinCondition: null,
+    joinTable: null,
   });
 });
 test("Execute SQL Query Without WHERE Clause", async () => {
-  const query = "SELECT id, name FROM sample";
+  const query = "SELECT id, name FROM student";
   const result = await executeSELECTQuery(query);
   expect(result.length).toBeGreaterThan(0);
   // ... other assertions for expected results
 });
 
 test("Execute SQL Query with WHERE Clause", async () => {
-  const query = "SELECT id, name FROM sample WHERE age = 25";
+  const query = "SELECT id, name FROM student WHERE age = 25";
   const result = await executeSELECTQuery(query);
   expect(result.length).toBe(1);
   expect(result[0]).toHaveProperty("id");
@@ -69,7 +73,7 @@ test("Execute SQL Query with WHERE Clause", async () => {
 
 // Test for invalid WHERE clause (missing operator)
 test("Execute SQL Query with Invalid WHERE Clause", async () => {
-  const query = "SELECT id, name FROM sample WHERE age 25"; // missing operator
+  const query = "SELECT id, name FROM student WHERE age 25"; // missing operator
   expect.assertions(1); // Only one assertion needed
   try {
     await executeSELECTQuery(query);
@@ -81,7 +85,7 @@ test("Execute SQL Query with Invalid WHERE Clause", async () => {
 
 // Test for invalid WHERE clause (invalid field)
 test("Execute SQL Execute SQL Query with Invalid WHERE Clause (invalid field)", async () => {
-  const query = "SELECT id, name FROM sample WHERE unknownField = 25";
+  const query = "SELECT id, name FROM student WHERE unknownField = 25";
   expect.assertions(1); // Only one assertion needed
   try {
     await executeSELECTQuery(query);
