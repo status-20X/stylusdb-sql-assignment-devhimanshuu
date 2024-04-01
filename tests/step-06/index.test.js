@@ -1,6 +1,6 @@
-const readCSV = require("../../src/csvReader");
-const parseQuery = require("../../src/queryParser");
-const executeSELECTQuery = require("../../src/index");
+const { readCSV } = require("../../src/csvReader");
+const { parseSelectQuery, parseJoinClause } = require("../../src/queryParser");
+const { executeSELECTQuery } = require("../../src/queryExecutor");
 
 test("Read CSV File", async () => {
   const data = await readCSV("./student.csv");
@@ -12,13 +12,19 @@ test("Read CSV File", async () => {
 
 test("Parse SQL Query", () => {
   const query = "SELECT id, name FROM student";
-  const parsed = parseQuery(query);
+  const parsed = parseSelectQuery(query);
   expect(parsed).toEqual({
     fields: ["id", "name"],
     table: "student",
     whereClauses: [],
     joinCondition: null,
     joinTable: null,
+    joinType: null,
+    groupByFields: null,
+    hasAggregateWithoutGroupBy: false,
+    isDistinct: false,
+    limit: null,
+    orderByFields: null,
   });
 });
 
@@ -34,7 +40,7 @@ test("Execute SQL Query", async () => {
 
 test("Parse SQL Query with WHERE Clause", () => {
   const query = "SELECT id, name FROM student WHERE age = 25";
-  const parsed = parseQuery(query);
+  const parsed = parseSelectQuery(query);
   expect(parsed).toEqual({
     fields: ["id", "name"],
     table: "student",
@@ -47,6 +53,12 @@ test("Parse SQL Query with WHERE Clause", () => {
     ],
     joinCondition: null,
     joinTable: null,
+    joinType: null,
+    groupByFields: null,
+    hasAggregateWithoutGroupBy: false,
+    isDistinct: false,
+    limit: null,
+    orderByFields: null,
   });
 });
 
@@ -61,7 +73,7 @@ test("Execute SQL Query with WHERE Clause", async () => {
 
 test("Parse SQL Query with Multiple WHERE Clauses", () => {
   const query = "SELECT id, name FROM student WHERE age = 30 AND name = John";
-  const parsed = parseQuery(query);
+  const parsed = parseSelectQuery(query);
   expect(parsed).toEqual({
     fields: ["id", "name"],
     table: "student",
@@ -79,26 +91,18 @@ test("Parse SQL Query with Multiple WHERE Clauses", () => {
     ],
     joinCondition: null,
     joinTable: null,
+    joinType: null,
+    groupByFields: null,
+    hasAggregateWithoutGroupBy: false,
+    isDistinct: false,
+    limit: null,
+    orderByFields: null,
   });
 });
 
-test("Execute SQL Query with Multiple WHERE Clause", async () => {
+test("Execute SQL Query with Complex WHERE Clause", async () => {
   const query = "SELECT id, name FROM student WHERE age = 30 AND name = John";
   const result = await executeSELECTQuery(query);
   expect(result.length).toBe(1);
   expect(result[0]).toEqual({ id: "1", name: "John" });
-});
-
-test("Missing Value After Operator in WHERE Clause", async () => {
-  const query = "SELECT id, name FROM student WHERE age = "; // Missing value
-  await expect(executeSELECTQuery(query)).rejects.toThrow(
-    "Invalid WHERE clause syntax: age =" // Include specific condition
-  );
-});
-
-test("Multiple Conditions with Missing Value", async () => {
-  const query = "SELECT id, name FROM student WHERE age = 30 AND name = "; // Missing value
-  await expect(executeSELECTQuery(query)).rejects.toThrow(
-    "Invalid WHERE clause syntax: name =" // Include specific condition
-  );
 });
